@@ -1,16 +1,17 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:eu-west-2:715841345153:task-definition/ace-clothing-task-def:3",
+    "taskDefinitionArn": "arn:aws:ecs:eu-west-2:715841345153:task-definition/ace-clothing-task-def:9",
     "containerDefinitions": [
         {
             "name": "ace-clothing-container",
-            "image": "karentinodevops/ace-clothing:f9f2e6f6f85c1f85d9513896e9fe442eb9bd3f2d",
-            "cpu": 0,
+            "image": "karentinodevops/ace-clothing:1d74bb9471a109a574e58d15c2d782e4d8537f91",
+            "cpu": 1024,
+            "memory": 2048,
             "portMappings": [
                 {
-                    "containerPort": 3000,
-                    "hostPort": 3000,
+                    "containerPort": 5173,
+                    "hostPort": 5173,
                     "protocol": "tcp",
-                    "name": "ace-clothing-container-3000-tcp",
+                    "name": "ace-clothing-container-5173-tcp",
                     "appProtocol": "http"
                 }
             ],
@@ -20,47 +21,21 @@
             "mountPoints": [],
             "volumesFrom": [],
             "ulimits": [],
-            "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                    "awslogs-group": "/ecs/ace-clothing-task-def",
-                    "awslogs-create-group": "true",
-                    "awslogs-region": "eu-west-2",
-                    "awslogs-stream-prefix": "ecs"
-                },
-                "secretOptions": []
-            },
             "systemControls": []
         }
     ],
     "family": "ace-clothing-task-def",
-    "taskRoleArn": "arn:aws:iam::715841345153:role/ecsTaskExecutionRole",
     "executionRoleArn": "arn:aws:iam::715841345153:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 3,
+    "revision": 9,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
-        {
-            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-        },
-        {
-            "name": "ecs.capability.execution-role-awslogs"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.task-iam-role"
-        },
         {
             "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
         },
         {
             "name": "ecs.capability.task-eni"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
         }
     ],
     "placementConstraints": [],
@@ -78,7 +53,7 @@
     ],
     "cpu": "1024",
     "memory": "3072",
-    "registeredAt": "2026-11-13T10:29:35.182Z",
+    "registeredAt": "2026-11-15T10:29:32.014Z",
     "registeredBy": "arn:aws:iam::715841345153:user/karen-admin",
     "enableFaultInjection": false,
     "tags": []

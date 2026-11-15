@@ -1,55 +1,95 @@
+
 name: Build and Push to Dockerhub then Deploy with ECS
 
-on: push
-    
-jobs: 
-    build:
-        runs-on: ubuntu-latest
+on:
+  push:
 
-        steps:
-             - name: checkout code
-               uses: actions/checkout@v4
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-             - name: Use Node.js
-               uses: actions/setup-node@v4
-               with:
-                node-version: 24
-                cache: npm 
-                
-             - run: npm ci
-             - run: npm run build --if-present
-             - run: npx eslint . --fix
-    
-    docker:
-        needs: build
-        runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        steps:
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
 
-                - name: checkout
-                  uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
 
-                - name: login to Docker hub
-                  uses: docker/login-action@v4
-                  with:
-                    username: ${{ vars.DOCKERHUB_USERNAME }}
-                    password: ${{ secrets.DOCKERHUB_TOKEN }}  
+      - name: Build application
+        run: npm run build --if-present
 
-                - name: set up QEMU
-                  uses: docker/setup-qemu-action@v4     
-                         
-                - name: set up Docker Buildx
-                  uses: docker/setup-buildx-action@v4
-   
-                - name: build and push
-                  uses: docker/build-push-action@v7
-                  with:
-                   push: true
-                   tags: karentinodevops/ace-clothing:${{ github.sha }}           
+      - name: Run ESLint
+        run: npx eslint . --fix
 
-            
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-       
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: karentinodevops/ace-clothing:${{ github.sha }}
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: eu-west-2
+      ECS_SERVICE: ace-clothing-task-def-service-el2wduau
+      ECS_CLUSTER: ace-clothing-cluster
+      ECS_TASK_DEFINITION: ecs-task-definition.json
+      CONTAINER_NAME: ace-clothing-container
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: karentinodevops/ace-clothing:${{ github.sha }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
