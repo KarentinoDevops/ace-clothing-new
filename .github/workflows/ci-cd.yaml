@@ -1,4 +1,4 @@
-name: Build
+name: Build and Push to Dockerhub then Deploy with ECS
 
 on: push
     
